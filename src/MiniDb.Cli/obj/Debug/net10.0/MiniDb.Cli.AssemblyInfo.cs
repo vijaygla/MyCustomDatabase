@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MiniDb.Cli")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f4602de700501daa86594779605a70924ebf9c9f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9bc2ea32feddb9c0d1130fb1b65f578d3c4a757c")]
 [assembly: System.Reflection.AssemblyProductAttribute("MiniDb.Cli")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MiniDb.Cli")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

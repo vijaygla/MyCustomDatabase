@@ -1,9 +1,22 @@
-﻿using MiniDb.Engine.Phase1InMemory;
+﻿using MiniDb.Engine.Phase3PageStorage;
+using MiniDb.Engine.Phase4Indexing;
 
-IKeyValueStore db = new InMemoryStore();
+Console.WriteLine("=== MiniDb Engine (Phase 4: Persistent B+ Tree Engine) ===");
 
-Console.WriteLine("=== MiniDb Engine (Phase 1: In-Memory) ===");
-Console.WriteLine("Commands: SET <key> <value> | GET <key> | DELETE <key> | EXIT\n");
+// 1. Initialize Disk Storage Engine & Buffer Pool Cache Manager (Phase 3)
+using var diskManager = new DiskManager("minidb.bin");
+var bufferPool = new BufferPoolManager(diskManager, poolSize: 10);
+
+// 2. Initialize Persistent B+ Tree Index Engine (Phase 4)
+var bTree = new BPlusTree(bufferPool, rootPageId: 0, maxKeys: 3);
+
+Console.WriteLine("=== Interactive CLI Started ===");
+Console.WriteLine("Commands:");
+Console.WriteLine("  SET <key> <value>  : Insert or Update key-value pair");
+Console.WriteLine("  GET <key>          : Lookup value by key (O(log N))");
+Console.WriteLine("  DELETE <key>       : Remove key from database");
+Console.WriteLine("  LIST               : Scan all keys stored in B+ Tree");
+Console.WriteLine("  EXIT               : Flush pages to disk and exit\n");
 
 while (true)
 {
@@ -17,7 +30,11 @@ while (true)
     var command = parts[0].ToUpper();
 
     if (command == "EXIT")
+    {
+        bufferPool.FlushAllPages();
+        Console.WriteLine("Flushing dirty pages to minidb.bin and exiting. Goodbye!");
         break;
+    }
 
     switch (command)
     {
@@ -28,8 +45,8 @@ while (true)
             }
             else
             {
-                db.Set(parts[1], parts[2]);
-                Console.WriteLine("OK");
+                bTree.Insert(parts[1], parts[2]);
+                Console.WriteLine("OK (Indexed & Persisted to 4KB Pages)");
             }
             break;
 
@@ -40,7 +57,7 @@ while (true)
             }
             else
             {
-                var val = db.Get(parts[1]);
+                var val = bTree.Search(parts[1]);
                 Console.WriteLine(val != null ? $"\"{val}\"" : "(nil)");
             }
             break;
@@ -52,8 +69,24 @@ while (true)
             }
             else
             {
-                var removed = db.Delete(parts[1]);
-                Console.WriteLine(removed ? "OK" : "(nil)");
+                bool deleted = bTree.Delete(parts[1]);
+                Console.WriteLine(deleted ? "OK" : "(nil)");
+            }
+            break;
+
+        case "LIST":
+            var allData = bTree.GetAllKeys();
+            if (allData.Count == 0)
+            {
+                Console.WriteLine("(empty database)");
+            }
+            else
+            {
+                Console.WriteLine($"--- Total Keys: {allData.Count} ---");
+                foreach (var kvp in allData)
+                {
+                    Console.WriteLine($"{kvp.Key} : \"{kvp.Value}\"");
+                }
             }
             break;
 

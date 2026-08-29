@@ -33,3 +33,31 @@ MyCustomDatabase/
         ├── Phase1Tests.cs
         └── Phase2Tests.cs
 ```
+# How Everything Works Together
+```
+                   USER
+                     │
+                     ▼
+               Program.cs
+                     │
+          ┌──────────┴──────────┐
+          │                     │
+          ▼                     ▼
+      SET/GET/DELETE       PAGE COMMANDS
+          │                     │
+          ▼                     ▼
+   AppendOnlyStore      BufferPoolManager
+          │                     │
+          ▼                     ▼
+    Dictionary RAM         Page Objects
+          │                     │
+          ▼                     ▼
+       data.db             DiskManager
+                                │
+                                ▼
+                           minidb.bin
+```
+
+# 
+Remove-Item minidb.bin -ErrorAction SilentlyContinue
+dotnet run --project src/MiniDb.Cli/MiniDb.Cli.csproj
