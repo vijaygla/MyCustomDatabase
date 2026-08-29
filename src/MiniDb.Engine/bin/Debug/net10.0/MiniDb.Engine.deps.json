@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "MiniDb.Engine/1.0.0": {
+        "runtime": {
+          "MiniDb.Engine.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "MiniDb.Engine/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

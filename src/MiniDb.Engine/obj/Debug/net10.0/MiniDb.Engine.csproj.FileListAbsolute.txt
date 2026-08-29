@@ -1,0 +1,12 @@
+C:\v\MyCustomDatabase\src\MiniDb.Engine\bin\Debug\net10.0\MiniDb.Engine.deps.json
+C:\v\MyCustomDatabase\src\MiniDb.Engine\bin\Debug\net10.0\MiniDb.Engine.dll
+C:\v\MyCustomDatabase\src\MiniDb.Engine\bin\Debug\net10.0\MiniDb.Engine.pdb
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\MiniDb.Engine.GeneratedMSBuildEditorConfig.editorconfig
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\MiniDb.Engine.AssemblyInfoInputs.cache
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\MiniDb.Engine.AssemblyInfo.cs
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\MiniDb.Engine.csproj.CoreCompileInputs.cache
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\MiniDb.Engine.sourcelink.json
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\MiniDb.Engine.dll
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\refint\MiniDb.Engine.dll
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\MiniDb.Engine.pdb
+C:\v\MyCustomDatabase\src\MiniDb.Engine\obj\Debug\net10.0\ref\MiniDb.Engine.dll
