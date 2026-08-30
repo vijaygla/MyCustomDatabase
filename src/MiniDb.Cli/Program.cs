@@ -1,5 +1,6 @@
 ﻿using MiniDb.Engine.Phase3PageStorage;
 using MiniDb.Engine.Phase4Indexing;
+using MiniDb.Engine.Phase5QueryEngine;
 
 Console.WriteLine("=== MiniDb Engine (Phase 4: Persistent B+ Tree Engine) ===");
 
@@ -17,6 +18,17 @@ Console.WriteLine("  GET <key>          : Lookup value by key (O(log N))");
 Console.WriteLine("  DELETE <key>       : Remove key from database");
 Console.WriteLine("  LIST               : Scan all keys stored in B+ Tree");
 Console.WriteLine("  EXIT               : Flush pages to disk and exit\n");
+
+var sql = "SELECT * FROM users WHERE id = 1";
+var lexer = new SqlLexer(sql);
+var tokens = lexer.Tokenize();
+
+Console.WriteLine($"SQL Query: {sql}\n");
+Console.WriteLine("Generated Tokens:");
+foreach (var token in tokens)
+{
+    Console.WriteLine($"[{token.Type}] => '{token.Value}'");
+}
 
 while (true)
 {

@@ -20,15 +20,14 @@ public class BufferPoolManager
             return page;
         }
 
-        // If RAM pool is full, flush dirty pages to disk
+        // RAM Pool full hone par unpinned/dirty pages flush karein
         if (_pageTable.Count >= _poolSize)
         {
             FlushAllPages();
         }
 
-        byte[] data = _diskManager.ReadPage(pageId);
         page = new Page(pageId);
-        Array.Copy(data, page.Data, Page.PAGE_SIZE);
+        _diskManager.ReadPage(pageId, page.Data);
         page.PinCount = 1;
 
         _pageTable[pageId] = page;

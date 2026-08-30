@@ -29,19 +29,30 @@ public class DiskManager : IDisposable
         _fileStream.Flush();
     }
 
-    public byte[] ReadPage(int pageId)
+    public void ReadPage(int pageId, byte[] pageData)
     {
-        byte[] buffer = new byte[Page.PAGE_SIZE];
+        if (pageData.Length != Page.PAGE_SIZE)
+        {
+            throw new ArgumentException($"Buffer must be exactly {Page.PAGE_SIZE} bytes.", nameof(pageData));
+        }
+
         long offset = (long)pageId * Page.PAGE_SIZE;
 
         if (offset >= _fileStream.Length)
         {
-            return buffer; // Return empty 4KB buffer for new page
+            Array.Clear(pageData, 0, Page.PAGE_SIZE);
+            return;
         }
 
         _fileStream.Seek(offset, SeekOrigin.Begin);
-        _fileStream.Read(buffer, 0, Page.PAGE_SIZE);
-        return buffer;
+
+        int totalBytesRead = 0;
+        while (totalBytesRead < Page.PAGE_SIZE)
+        {
+            int bytesRead = _fileStream.Read(pageData, totalBytesRead, Page.PAGE_SIZE - totalBytesRead);
+            if (bytesRead == 0) break;
+            totalBytesRead += bytesRead;
+        }
     }
 
     public void Dispose()
