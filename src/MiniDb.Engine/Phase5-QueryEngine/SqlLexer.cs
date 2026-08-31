@@ -2,11 +2,11 @@ namespace MiniDb.Engine.Phase5QueryEngine;
 
 public enum TokenType
 {
-    Keyword,      // SELECT, INSERT, CREATE, TABLE, FROM, WHERE, VALUES, INTO
+    Keyword,      // SELECT, INSERT, CREATE, TABLE, FROM, WHERE, VALUES, INTO, DELETE, DROP
     Identifier,   // Table names, Column names (e.g., users, id, name)
     StringLiteral,// 'vijay', 'kumar'
     NumberLiteral,// 1, 42
-    Symbol,       // *, =, ( , ) , ,
+    Symbol,       // *, =, (, ), ,
     EOF           // End of Query
 }
 
@@ -19,7 +19,7 @@ public class SqlLexer
 
     private static readonly HashSet<string> Keywords = new(StringComparer.OrdinalIgnoreCase)
     {
-        "CREATE", "TABLE", "INSERT", "INTO", "VALUES", "SELECT", "FROM", "WHERE", "INT", "TEXT"
+        "CREATE", "TABLE", "INSERT", "INTO", "VALUES", "SELECT", "FROM", "WHERE", "INT", "TEXT", "DELETE", "DROP"
     };
 
     public SqlLexer(string text)
@@ -36,14 +36,12 @@ public class SqlLexer
         {
             char current = _text[_position];
 
-            // Skip Whitespaces
             if (char.IsWhiteSpace(current))
             {
                 _position++;
                 continue;
             }
 
-            // Symbols (*, =, (, ), ,)
             if (current is '*' or '=' or '(' or ')' or ',')
             {
                 tokens.Add(new Token(TokenType.Symbol, current.ToString()));
@@ -51,7 +49,6 @@ public class SqlLexer
                 continue;
             }
 
-            // String Literals ('vijay')
             if (current == '\'')
             {
                 _position++; // Skip opening quote
@@ -69,7 +66,6 @@ public class SqlLexer
                 continue;
             }
 
-            // Numbers (1, 100)
             if (char.IsDigit(current))
             {
                 int start = _position;
@@ -82,7 +78,6 @@ public class SqlLexer
                 continue;
             }
 
-            // Keywords or Identifiers
             if (char.IsLetter(current) || current == '_')
             {
                 int start = _position;
@@ -103,7 +98,6 @@ public class SqlLexer
                 continue;
             }
 
-            // Unknown character safety skip
             _position++;
         }
 
@@ -111,3 +105,4 @@ public class SqlLexer
         return tokens;
     }
 }
+

@@ -2,33 +2,24 @@
 using MiniDb.Engine.Phase4Indexing;
 using MiniDb.Engine.Phase5QueryEngine;
 
-Console.WriteLine("=== MiniDb Engine (Phase 4: Persistent B+ Tree Engine) ===");
+Console.WriteLine("=== MiniDb Engine (Full SQL & Persistent B+ Tree Storage) ===");
 
-// 1. Initialize Disk Storage Engine & Buffer Pool Cache Manager (Phase 3)
 using var diskManager = new DiskManager("minidb.bin");
 var bufferPool = new BufferPoolManager(diskManager, poolSize: 10);
-
-// 2. Initialize Persistent B+ Tree Index Engine (Phase 4)
 var bTree = new BPlusTree(bufferPool, rootPageId: 0, maxKeys: 3);
+var executionEngine = new ExecutionEngine(bTree);
 
-Console.WriteLine("=== Interactive CLI Started ===");
-Console.WriteLine("Commands:");
-Console.WriteLine("  SET <key> <value>  : Insert or Update key-value pair");
-Console.WriteLine("  GET <key>          : Lookup value by key (O(log N))");
-Console.WriteLine("  DELETE <key>       : Remove key from database");
-Console.WriteLine("  LIST               : Scan all keys stored in B+ Tree");
-Console.WriteLine("  EXIT               : Flush pages to disk and exit\n");
-
-var sql = "SELECT * FROM users WHERE id = 1";
-var lexer = new SqlLexer(sql);
-var tokens = lexer.Tokenize();
-
-Console.WriteLine($"SQL Query: {sql}\n");
-Console.WriteLine("Generated Tokens:");
-foreach (var token in tokens)
-{
-    Console.WriteLine($"[{token.Type}] => '{token.Value}'");
-}
+Console.WriteLine("\n=== SQL Interactive CLI Ready ===");
+Console.WriteLine("Supported SQL Commands:");
+Console.WriteLine("  CREATE TABLE users (id INT, name TEXT)");
+Console.WriteLine("  INSERT INTO users VALUES ('1', 'vijay')");
+Console.WriteLine("  SELECT * FROM users");
+Console.WriteLine("  SELECT * FROM users WHERE id = 1");
+Console.WriteLine("  DELETE FROM users WHERE id = 1");
+Console.WriteLine("  DELETE FROM users");
+Console.WriteLine("  DROP TABLE users");
+Console.WriteLine("  LIST  (Raw Index View)");
+Console.WriteLine("  EXIT\n");
 
 while (true)
 {
@@ -38,72 +29,39 @@ while (true)
     if (string.IsNullOrWhiteSpace(input))
         continue;
 
-    var parts = input.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
-    var command = parts[0].ToUpper();
-
-    if (command == "EXIT")
+    if (input.Equals("EXIT", StringComparison.OrdinalIgnoreCase))
     {
         bufferPool.FlushAllPages();
         Console.WriteLine("Flushing dirty pages to minidb.bin and exiting. Goodbye!");
         break;
     }
 
-    switch (command)
+    if (input.Equals("LIST", StringComparison.OrdinalIgnoreCase))
     {
-        case "SET":
-            if (parts.Length < 3)
+        var allData = bTree.GetAllKeys();
+        if (allData.Count == 0)
+        {
+            Console.WriteLine("(empty database)");
+        }
+        else
+        {
+            Console.WriteLine($"--- Total Keys in B+ Tree Index: {allData.Count} ---");
+            foreach (var kvp in allData)
             {
-                Console.WriteLine("Error: SET requires both key and value. Usage: SET <key> <value>");
+                Console.WriteLine($"{kvp.Key} => \"{kvp.Value}\"");
             }
-            else
-            {
-                bTree.Insert(parts[1], parts[2]);
-                Console.WriteLine("OK (Indexed & Persisted to 4KB Pages)");
-            }
-            break;
+        }
+        continue;
+    }
 
-        case "GET":
-            if (parts.Length < 2)
-            {
-                Console.WriteLine("Error: GET requires a key. Usage: GET <key>");
-            }
-            else
-            {
-                var val = bTree.Search(parts[1]);
-                Console.WriteLine(val != null ? $"\"{val}\"" : "(nil)");
-            }
-            break;
-
-        case "DELETE":
-            if (parts.Length < 2)
-            {
-                Console.WriteLine("Error: DELETE requires a key. Usage: DELETE <key>");
-            }
-            else
-            {
-                bool deleted = bTree.Delete(parts[1]);
-                Console.WriteLine(deleted ? "OK" : "(nil)");
-            }
-            break;
-
-        case "LIST":
-            var allData = bTree.GetAllKeys();
-            if (allData.Count == 0)
-            {
-                Console.WriteLine("(empty database)");
-            }
-            else
-            {
-                Console.WriteLine($"--- Total Keys: {allData.Count} ---");
-                foreach (var kvp in allData)
-                {
-                    Console.WriteLine($"{kvp.Key} : \"{kvp.Value}\"");
-                }
-            }
-            break;
-
-        default:
-            Console.WriteLine($"Unknown command: '{command}'");
-            break;
+    try
+    {
+        string result = executionEngine.Execute(input);
+        Console.WriteLine(result);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Execution Error]: {ex.Message}");
     }
 }
+
