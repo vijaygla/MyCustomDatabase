@@ -39,3 +39,12 @@ public class DropTableStatement : SqlStatement
 {
     public string TableName { get; set; } = string.Empty;
 }
+
+public class UpdateStatement : SqlStatement
+{
+    public string TableName { get; set; } = string.Empty;
+    public string ColumnName { get; set; } = string.Empty;
+    public string NewValue { get; set; } = string.Empty;
+    public string? WhereColumn { get; set; }
+    public string? WhereValue { get; set; }
+}

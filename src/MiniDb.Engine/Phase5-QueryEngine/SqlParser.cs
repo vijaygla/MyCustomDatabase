@@ -1,5 +1,10 @@
 namespace MiniDb.Engine.Phase5QueryEngine;
 
+// Transaction AST Nodes
+public class BeginTransactionStatement : SqlStatement { }
+public class CommitTransactionStatement : SqlStatement { }
+public class RollbackTransactionStatement : SqlStatement { }
+
 public class SqlParser
 {
     private readonly List<Token> _tokens;
@@ -26,19 +31,48 @@ public class SqlParser
 
     public SqlStatement Parse()
     {
-        if (Current.Type != TokenType.Keyword)
+        string cmd = Current.Value.ToUpper();
+
+        // Transaction Handling
+        if (cmd == "BEGIN" || cmd == "START")
         {
-            throw new Exception("Invalid Query: Command must start with a SQL Keyword");
+            _position++;
+            if (Current.Value.Equals("TRANSACTION", StringComparison.OrdinalIgnoreCase))
+            {
+                _position++;
+            }
+            return new BeginTransactionStatement();
         }
 
-        return Current.Value.ToUpper() switch
+        if (cmd == "COMMIT")
+        {
+            _position++;
+            if (Current.Value.Equals("TRANSACTION", StringComparison.OrdinalIgnoreCase))
+            {
+                _position++;
+            }
+            return new CommitTransactionStatement();
+        }
+
+        if (cmd == "ROLLBACK")
+        {
+            _position++;
+            if (Current.Value.Equals("TRANSACTION", StringComparison.OrdinalIgnoreCase))
+            {
+                _position++;
+            }
+            return new RollbackTransactionStatement();
+        }
+
+        return cmd switch
         {
             "CREATE" => ParseCreateTable(),
             "INSERT" => ParseInsert(),
             "SELECT" => ParseSelect(),
             "DELETE" => ParseDelete(),
+            "UPDATE" => ParseUpdate(),
             "DROP" => ParseDropTable(),
-            _ => throw new Exception($"Unsupported command: '{Current.Value}'")
+            _ => throw new Exception($"Unsupported command or keyword: '{Current.Value}'")
         };
     }
 
@@ -56,7 +90,14 @@ public class SqlParser
         while (true)
         {
             string colName = Match(TokenType.Identifier).Value;
-            string dataType = Match(TokenType.Keyword).Value;
+
+            if (Current.Type != TokenType.Keyword && Current.Type != TokenType.Identifier)
+            {
+                throw new Exception($"Syntax Error: Expected Data Type, found '{Current.Value}'");
+            }
+            string dataType = Current.Value;
+            _position++;
+
             stmt.Columns.Add(new ColumnDefinition { Name = colName, DataType = dataType });
 
             if (Current.Value == ")") break;
@@ -82,9 +123,14 @@ public class SqlParser
 
         while (true)
         {
-            string val = Current.Value;
+            // Accept both Literals (strings) and Identifiers/Numbers for values
+            if (Current.Type != TokenType.Literal && Current.Type != TokenType.Identifier && Current.Type != TokenType.Keyword)
+            {
+                throw new Exception($"Syntax Error: Expected value, found '{Current.Value}'");
+            }
+
+            stmt.Values.Add(Current.Value);
             _position++;
-            stmt.Values.Add(val);
 
             if (Current.Value == ")") break;
             Match(TokenType.Symbol, ",");
@@ -105,7 +151,7 @@ public class SqlParser
             TableName = Match(TokenType.Identifier).Value
         };
 
-        if (Current.Type == TokenType.Keyword && Current.Value.Equals("WHERE", StringComparison.OrdinalIgnoreCase))
+        if (Current.Value.Equals("WHERE", StringComparison.OrdinalIgnoreCase))
         {
             Match(TokenType.Keyword, "WHERE");
             stmt.WhereColumn = Match(TokenType.Identifier).Value;
@@ -127,7 +173,34 @@ public class SqlParser
             TableName = Match(TokenType.Identifier).Value
         };
 
-        if (Current.Type == TokenType.Keyword && Current.Value.Equals("WHERE", StringComparison.OrdinalIgnoreCase))
+        if (Current.Value.Equals("WHERE", StringComparison.OrdinalIgnoreCase))
+        {
+            Match(TokenType.Keyword, "WHERE");
+            stmt.WhereColumn = Match(TokenType.Identifier).Value;
+            Match(TokenType.Symbol, "=");
+            stmt.WhereValue = Current.Value;
+            _position++;
+        }
+
+        return stmt;
+    }
+
+    private UpdateStatement ParseUpdate()
+    {
+        Match(TokenType.Keyword, "UPDATE");
+
+        var stmt = new UpdateStatement
+        {
+            TableName = Match(TokenType.Identifier).Value
+        };
+
+        Match(TokenType.Keyword, "SET");
+        stmt.ColumnName = Match(TokenType.Identifier).Value;
+        Match(TokenType.Symbol, "=");
+        stmt.NewValue = Current.Value;
+        _position++;
+
+        if (Current.Value.Equals("WHERE", StringComparison.OrdinalIgnoreCase))
         {
             Match(TokenType.Keyword, "WHERE");
             stmt.WhereColumn = Match(TokenType.Identifier).Value;

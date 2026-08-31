@@ -8,11 +8,13 @@ public class DiskManager : IDisposable
     public DiskManager(string dbFilePath = "minidb.bin")
     {
         _dbFilePath = dbFilePath;
+
+        // Fixed FileShare from None to ReadWrite to prevent startup deadlock/freeze on app restart
         _fileStream = new FileStream(
             _dbFilePath,
             FileMode.OpenOrCreate,
             FileAccess.ReadWrite,
-            FileShare.None
+            FileShare.ReadWrite
         );
     }
 
@@ -57,6 +59,14 @@ public class DiskManager : IDisposable
 
     public void Dispose()
     {
-        _fileStream?.Dispose();
+        try
+        {
+            _fileStream?.Flush(true); // Force OS to write to disk
+            _fileStream?.Dispose();
+        }
+        catch
+        {
+            // Ignore stream dispose errors during force exit
+        }
     }
 }

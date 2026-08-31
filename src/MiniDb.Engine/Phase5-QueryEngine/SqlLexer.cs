@@ -2,15 +2,20 @@ namespace MiniDb.Engine.Phase5QueryEngine;
 
 public enum TokenType
 {
-    Keyword,      // SELECT, INSERT, CREATE, TABLE, FROM, WHERE, VALUES, INTO, DELETE, DROP
-    Identifier,   // Table names, Column names (e.g., users, id, name)
-    StringLiteral,// 'vijay', 'kumar'
-    NumberLiteral,// 1, 42
-    Symbol,       // *, =, (, ), ,
-    EOF           // End of Query
+    Keyword,
+    Identifier,
+    Literal,
+    Symbol,
+    EOF
 }
 
-public record Token(TokenType Type, string Value);
+public class Token
+{
+    public TokenType Type { get; set; }
+    public string Value { get; set; } = string.Empty;
+
+    public override string ToString() => $"Token({Type}, '{Value}')";
+}
 
 public class SqlLexer
 {
@@ -19,14 +24,19 @@ public class SqlLexer
 
     private static readonly HashSet<string> Keywords = new(StringComparer.OrdinalIgnoreCase)
     {
-        "CREATE", "TABLE", "INSERT", "INTO", "VALUES", "SELECT", "FROM", "WHERE", "INT", "TEXT", "DELETE", "DROP"
+        "CREATE", "TABLE", "INSERT", "INTO", "VALUES",
+        "SELECT", "FROM", "WHERE", "DELETE", "DROP",
+        "UPDATE", "SET",
+        "BEGIN", "COMMIT", "ROLLBACK", "TRANSACTION", "START"
     };
 
     public SqlLexer(string text)
     {
-        _text = text ?? string.Empty;
+        _text = text;
         _position = 0;
     }
+
+    private char Current => _position < _text.Length ? _text[_position] : '\0';
 
     public List<Token> Tokenize()
     {
@@ -34,75 +44,77 @@ public class SqlLexer
 
         while (_position < _text.Length)
         {
-            char current = _text[_position];
-
-            if (char.IsWhiteSpace(current))
+            if (char.IsWhiteSpace(Current))
             {
                 _position++;
                 continue;
             }
 
-            if (current is '*' or '=' or '(' or ')' or ',')
+            // Handle SQL Comments (-- to end of line)
+            if (Current == '-' && _position + 1 < _text.Length && _text[_position + 1] == '-')
             {
-                tokens.Add(new Token(TokenType.Symbol, current.ToString()));
+                while (_position < _text.Length && Current != '\n' && Current != '\r')
+                {
+                    _position++;
+                }
+                continue;
+            }
+
+            if (Current is '(' or ')' or ',' or '=' or '*')
+            {
+                tokens.Add(new Token { Type = TokenType.Symbol, Value = Current.ToString() });
                 _position++;
                 continue;
             }
 
-            if (current == '\'')
+            if (Current is '\'' or '"')
             {
-                _position++; // Skip opening quote
-                int start = _position;
-                while (_position < _text.Length && _text[_position] != '\'')
-                {
-                    _position++;
-                }
-                string strVal = _text.Substring(start, _position - start);
-                if (_position < _text.Length && _text[_position] == '\'')
-                {
-                    _position++; // Skip closing quote
-                }
-                tokens.Add(new Token(TokenType.StringLiteral, strVal));
+                tokens.Add(ReadLiteral());
                 continue;
             }
 
-            if (char.IsDigit(current))
+            if (char.IsLetterOrDigit(Current) || Current == '_')
             {
-                int start = _position;
-                while (_position < _text.Length && char.IsDigit(_text[_position]))
-                {
-                    _position++;
-                }
-                string numVal = _text.Substring(start, _position - start);
-                tokens.Add(new Token(TokenType.NumberLiteral, numVal));
+                tokens.Add(ReadIdentifierOrKeyword());
                 continue;
             }
 
-            if (char.IsLetter(current) || current == '_')
-            {
-                int start = _position;
-                while (_position < _text.Length && (char.IsLetterOrDigit(_text[_position]) || _text[_position] == '_'))
-                {
-                    _position++;
-                }
-                string word = _text.Substring(start, _position - start);
+            throw new Exception($"Unexpected character: '{Current}' at position {_position}");
+        }
 
-                if (Keywords.Contains(word))
-                {
-                    tokens.Add(new Token(TokenType.Keyword, word.ToUpper()));
-                }
-                else
-                {
-                    tokens.Add(new Token(TokenType.Identifier, word));
-                }
-                continue;
-            }
+        tokens.Add(new Token { Type = TokenType.EOF, Value = "" });
+        return tokens;
+    }
 
+    private Token ReadLiteral()
+    {
+        char quote = Current;
+        _position++;
+        int start = _position;
+
+        while (_position < _text.Length && Current != quote)
+        {
             _position++;
         }
 
-        tokens.Add(new Token(TokenType.EOF, string.Empty));
-        return tokens;
+        string val = _text.Substring(start, _position - start);
+        _position++;
+
+        return new Token { Type = TokenType.Literal, Value = val };
+    }
+
+    private Token ReadIdentifierOrKeyword()
+    {
+        int start = _position;
+
+        while (_position < _text.Length && (char.IsLetterOrDigit(Current) || Current == '_'))
+        {
+            _position++;
+        }
+
+        string word = _text.Substring(start, _position - start);
+        var type = Keywords.Contains(word) ? TokenType.Keyword : TokenType.Identifier;
+
+        return new Token { Type = type, Value = word };
     }
 }
-

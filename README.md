@@ -58,6 +58,7 @@ MyCustomDatabase/
                            minidb.bin
 ```
 
-# 
-Remove-Item minidb.bin -ErrorAction SilentlyContinue
+# command run when restart
+Stop-Process -Name "MiniDb.Cli" -Force -ErrorAction SilentlyContinue         
+Remove-Item -Path "database.bin", "database.wal", "minidb.bin", "minidb.wal" -Force -ErrorAction SilentlyContinue
 dotnet run --project src/MiniDb.Cli/MiniDb.Cli.csproj

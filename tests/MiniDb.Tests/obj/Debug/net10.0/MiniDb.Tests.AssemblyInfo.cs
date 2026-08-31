@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MiniDb.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ab9ca38e99e837579e0c7082b2842019cf8bef78")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+23160aa8a3109009d0175a22aee834e89f9d96f8")]
 [assembly: System.Reflection.AssemblyProductAttribute("MiniDb.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MiniDb.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

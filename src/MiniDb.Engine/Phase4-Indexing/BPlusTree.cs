@@ -39,15 +39,22 @@ public class BPlusTree
         return leaf.Values.TryGetValue(key, out var val) ? val : null;
     }
 
+    /// <summary>
+    /// Inserts a new key-value pair.
+    /// Throws InvalidOperationException if key already exists (Primary Key Violation).
+    /// </summary>
     public void Insert(string key, string value)
     {
         var leaf = FindLeafNode(RootPageId, key);
 
-        if (!leaf.Keys.Contains(key))
+        // DUPLICATE PRIMARY KEY CHECK
+        if (leaf.Keys.Contains(key))
         {
-            leaf.Keys.Add(key);
-            leaf.Keys.Sort();
+            throw new InvalidOperationException($"Primary key violation: Duplicate key '{key}' already exists in table.");
         }
+
+        leaf.Keys.Add(key);
+        leaf.Keys.Sort();
         leaf.Values[key] = value;
 
         SaveNode(leaf);
@@ -56,6 +63,20 @@ public class BPlusTree
         {
             SplitLeafNode(leaf);
         }
+    }
+
+    /// <summary>
+    /// Updates an existing key's value in the B+ Tree.
+    /// Returns false if key is not found.
+    /// </summary>
+    public bool Update(string key, string newValue)
+    {
+        var leaf = FindLeafNode(RootPageId, key);
+        if (!leaf.Keys.Contains(key)) return false;
+
+        leaf.Values[key] = newValue;
+        SaveNode(leaf);
+        return true;
     }
 
     public bool Delete(string key)
